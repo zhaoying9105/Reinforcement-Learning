@@ -1,0 +1,373 @@
+<html>
+<head>
+<title>TicTacToe .py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.ln { color: #606366; font-weight: normal; font-style: normal; }
+.s0 { color: rgb(204,120,50); }
+.s1 { color: rgb(169,183,198); }
+.s2 { color: rgb(104,151,187); }
+.s3 { color: rgb(128,128,128); }
+.s4 { color: rgb(106,135,89); }
+</style>
+</head>
+<BODY BGCOLOR="#2b2b2b">
+<TABLE CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<TR><TD><CENTER>
+<FONT FACE="Arial, Helvetica" COLOR="#000000">
+TicTacToe .py</FONT>
+</center></TD></TR></TABLE>
+<pre>
+<span class="s0">from  </span><span class="s1">__future__ </span><span class="s0">import </span><span class="s1">print_function 
+</span><span class="s0">import  </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np 
+</span><span class="s0">import </span><span class="s1">pickle 
+ 
+BOARD_ROWS = </span><span class="s2">3</span><span class="s1"> 
+BOARD_COLS = </span><span class="s2">3</span><span class="s1"> 
+BOARD_SIZE = BOARD_ROWS* BOARD_COLS 
+ 
+</span><span class="s0">class </span><span class="s1">State : 
+    </span><span class="s0">def </span><span class="s1">__init__(self): 
+        self.data = np.zeros((BOARD_ROWS</span><span class="s0">, </span><span class="s1">BOARD_COLS)) 
+        self.winner = </span><span class="s0">None</span><span class="s1"> 
+        self.hashVal = </span><span class="s0">None</span><span class="s1"> 
+        self.end = </span><span class="s0">None</span><span class="s1"> 
+        </span><span class="s3"># the board is represened by a n*n array</span><span class="s1"> 
+        </span><span class="s3"># 1 renpresents chessman of the player who moves first</span><span class="s1"> 
+        </span><span class="s3"># -1 represent chessman of another player</span><span class="s1"> 
+        </span><span class="s3"># 0 represents empty position</span><span class="s1"> 
+ 
+    </span><span class="s3"># CALCULATE the hash value for one state ,it's unique</span><span class="s1"> 
+    </span><span class="s0">def </span><span class="s1">getHash(self): 
+        </span><span class="s0">if </span><span class="s1">self.hashVal </span><span class="s0">is None</span><span class="s1">: 
+            self.hashVal = </span><span class="s2">0</span><span class="s1"> 
+            </span><span class="s0">for </span><span class="s1">i </span><span class="s0">in </span><span class="s1">self.data.reshape(BOARD_ROWS*BOARD_COLS): 
+                </span><span class="s0">if </span><span class="s1">i == -</span><span class="s2">1</span><span class="s1">: 
+                    i = </span><span class="s2">2</span><span class="s1"> 
+                self.hashVal = self.hashVal * </span><span class="s2">3 </span><span class="s1">+ i 
+        </span><span class="s0">return </span><span class="s1">int(self.hashVal) 
+ 
+    </span><span class="s3"># determine whther a player has won the game, or it's a tie</span><span class="s1"> 
+    </span><span class="s0">def </span><span class="s1">isEnd(self): 
+        </span><span class="s0">if </span><span class="s1">self.end </span><span class="s0">is not None</span><span class="s1">: 
+            </span><span class="s0">return </span><span class="s1">self.end 
+        results = [] 
+        </span><span class="s3"># check row</span><span class="s1"> 
+        </span><span class="s0">for </span><span class="s1">i </span><span class="s0">in </span><span class="s1">range(</span><span class="s2">0</span><span class="s0">,</span><span class="s1">BOARD_ROWS): 
+            results.append(np.sum(self.data[i</span><span class="s0">,</span><span class="s1">:])) 
+        </span><span class="s3"># check columns</span><span class="s1"> 
+        </span><span class="s0">for </span><span class="s1">i </span><span class="s0">in </span><span class="s1">range(</span><span class="s2">0</span><span class="s0">,</span><span class="s1">BOARD_COLS): 
+            results.append(np.sum(self.data[:</span><span class="s0">,</span><span class="s1">i])) 
+ 
+        </span><span class="s3"># check diagonals  对角线的</span><span class="s1"> 
+        results.append(</span><span class="s2">0</span><span class="s1">) 
+        </span><span class="s0">for </span><span class="s1">i </span><span class="s0">in </span><span class="s1">range(</span><span class="s2">0</span><span class="s0">,</span><span class="s1">BOARD_ROWS): 
+            results[-</span><span class="s2">1</span><span class="s1">] += self.data[i</span><span class="s0">, </span><span class="s1">i] 
+        results.append(</span><span class="s2">0</span><span class="s1">) 
+        </span><span class="s0">for </span><span class="s1">i </span><span class="s0">in </span><span class="s1">range(</span><span class="s2">0</span><span class="s0">, </span><span class="s1">BOARD_ROWS): 
+            results[-</span><span class="s2">1</span><span class="s1">] += self.data[i</span><span class="s0">, </span><span class="s1">BOARD_ROWS - </span><span class="s2">1 </span><span class="s1">- i] 
+ 
+        </span><span class="s0">for </span><span class="s1">result </span><span class="s0">in </span><span class="s1">results : 
+            </span><span class="s0">if </span><span class="s1">result == </span><span class="s2">3</span><span class="s1">: 
+                self.winner = </span><span class="s2">1</span><span class="s1"> 
+                self.end = </span><span class="s0">True</span><span class="s1"> 
+                </span><span class="s0">return </span><span class="s1">self.end 
+            </span><span class="s0">if </span><span class="s1">result == -</span><span class="s2">3</span><span class="s1">: 
+                self.winner = -</span><span class="s2">1</span><span class="s1"> 
+                self.end = </span><span class="s0">True</span><span class="s1"> 
+                </span><span class="s0">return </span><span class="s1">self.end 
+        </span><span class="s3"># whether it's a tie</span><span class="s1"> 
+        sum = np.sum(np.abs(self.data)) 
+        </span><span class="s0">if </span><span class="s1">sum == BOARD_ROWS*BOARD_COLS: 
+            self.winner = </span><span class="s2">0</span><span class="s1"> 
+            self.end = </span><span class="s0">True</span><span class="s1"> 
+            </span><span class="s0">return </span><span class="s1">self.end 
+ 
+        self.end = </span><span class="s0">False</span><span class="s1"> 
+        </span><span class="s0">return </span><span class="s1">self.end 
+ 
+ 
+    </span><span class="s3"># @ symbol 1 or -1</span><span class="s1"> 
+    </span><span class="s3"># put chessman symbol in position(i,j)</span><span class="s1"> 
+    </span><span class="s0">def </span><span class="s1">nextState(self</span><span class="s0">,</span><span class="s1">i</span><span class="s0">,</span><span class="s1">j</span><span class="s0">,</span><span class="s1">symbol): 
+        newState = State() 
+        newState.data = np.copy(self.data) 
+        newState.data[i</span><span class="s0">, </span><span class="s1">j] = symbol 
+        </span><span class="s0">return </span><span class="s1">newState 
+ 
+    </span><span class="s3"># print the board</span><span class="s1"> 
+    </span><span class="s0">def </span><span class="s1">show(self): 
+        </span><span class="s0">for </span><span class="s1">i </span><span class="s0">in </span><span class="s1">range(</span><span class="s2">0</span><span class="s0">,</span><span class="s1">BOARD_ROWS): 
+            print(</span><span class="s4">'--------------'</span><span class="s1">) 
+            out = </span><span class="s4">'|'</span><span class="s1"> 
+            </span><span class="s0">for </span><span class="s1">j </span><span class="s0">in </span><span class="s1">range(</span><span class="s2">0</span><span class="s0">,</span><span class="s1">BOARD_COLS): 
+                </span><span class="s0">if </span><span class="s1">self.data[i</span><span class="s0">,</span><span class="s1">j] == </span><span class="s2">1</span><span class="s1">: 
+                    token = </span><span class="s4">'*'</span><span class="s1"> 
+                </span><span class="s0">if </span><span class="s1">self.data[i</span><span class="s0">,</span><span class="s1">j] == </span><span class="s2">0</span><span class="s1">: 
+                    token = </span><span class="s4">'0'</span><span class="s1"> 
+                </span><span class="s0">if </span><span class="s1">self.data[i</span><span class="s0">,</span><span class="s1">j] == -</span><span class="s2">1</span><span class="s1">: 
+                    token = </span><span class="s4">'x'</span><span class="s1"> 
+ 
+                out += token + </span><span class="s4">'|'</span><span class="s1"> 
+            print(out) 
+        print(</span><span class="s4">'--------------'</span><span class="s1">) 
+ 
+</span><span class="s0">def </span><span class="s1">getAllStatesImpl(currentState</span><span class="s0">, </span><span class="s1">currentSymbol</span><span class="s0">, </span><span class="s1">allStates): 
+    </span><span class="s0">for </span><span class="s1">i </span><span class="s0">in </span><span class="s1">range (</span><span class="s2">0</span><span class="s0">,</span><span class="s1">BOARD_ROWS): 
+        </span><span class="s0">for </span><span class="s1">j </span><span class="s0">in </span><span class="s1">range(</span><span class="s2">0</span><span class="s0">,</span><span class="s1">BOARD_COLS): 
+            </span><span class="s0">if </span><span class="s1">currentState.data[i][j] == </span><span class="s2">0</span><span class="s1">: 
+                newState = currentState.nextState(i</span><span class="s0">,</span><span class="s1">j</span><span class="s0">,</span><span class="s1">currentSymbol) 
+                newHash = newState.getHash() 
+                </span><span class="s0">if </span><span class="s1">newHash </span><span class="s0">not in </span><span class="s1">allStates.keys(): 
+                    isEnd = newState.isEnd() 
+                    allStates[newHash] = (newState</span><span class="s0">,</span><span class="s1">isEnd) 
+                    </span><span class="s0">if not </span><span class="s1">isEnd: 
+                        getAllStatesImpl(newState</span><span class="s0">,</span><span class="s1">-currentSymbol</span><span class="s0">,</span><span class="s1">allStates) 
+ 
+ 
+</span><span class="s0">def </span><span class="s1">getAllStates(): 
+    currentSymbol = </span><span class="s2">1</span><span class="s1"> 
+    currentState = State() 
+    allStates = dict() 
+    allStates[currentState.getHash()] = (currentState</span><span class="s0">,</span><span class="s1">currentState.isEnd()) 
+    getAllStatesImpl(currentState</span><span class="s0">,</span><span class="s1">currentSymbol</span><span class="s0">,</span><span class="s1">allStates) 
+    </span><span class="s0">return  </span><span class="s1">allStates 
+ 
+</span><span class="s3"># all possible board configurations</span><span class="s1"> 
+allStates = getAllStates() 
+ 
+ 
+</span><span class="s0">class </span><span class="s1">Judger: 
+ 
+    </span><span class="s3"># @player1: player who will move first, its chessman will be 1</span><span class="s1"> 
+    </span><span class="s3"># @player2: another player with chessman -1</span><span class="s1"> 
+    </span><span class="s3"># @feedback: if True, both players will receive rewards when game is end</span><span class="s1"> 
+    </span><span class="s0">def </span><span class="s1">__init__(self</span><span class="s0">,</span><span class="s1">player1</span><span class="s0">,</span><span class="s1">player2</span><span class="s0">,</span><span class="s1">feedback=</span><span class="s0">True</span><span class="s1">): 
+        self.p1 = player1 
+        self.p2 = player2 
+        self.feedback = feedback 
+        self.currentPlayer = </span><span class="s0">None</span><span class="s1"> 
+        self.p1Symbol = </span><span class="s2">1</span><span class="s1"> 
+        self.p2Symbol = -</span><span class="s2">1</span><span class="s1"> 
+        self.p1.setSymbol(self.p1Symbol) 
+        self.p2.setSymbol(self.p2Symbol) 
+        self.currentState = State() 
+        self.allStates = allStates 
+ 
+ 
+    </span><span class="s3"># GIVE reward to two players</span><span class="s1"> 
+    </span><span class="s0">def </span><span class="s1">giveReward(self): 
+        </span><span class="s0">if </span><span class="s1">self.currentState.winner == self.p1Symbol: 
+            self.p1.feedReward(</span><span class="s2">1</span><span class="s1">) 
+            self.p2.feedReward(</span><span class="s2">0</span><span class="s1">) 
+        </span><span class="s0">elif </span><span class="s1">self.currentState.winner == self.p2Symbol: 
+            self.p1.feedReward(</span><span class="s2">0</span><span class="s1">) 
+            self.p2.feedReward(</span><span class="s2">1</span><span class="s1">) 
+        </span><span class="s0">else</span><span class="s1">: 
+            self.p1.feedReward(</span><span class="s2">0.1</span><span class="s1">) 
+            self.p2.feedReward(</span><span class="s2">0.5</span><span class="s1">) 
+ 
+ 
+    </span><span class="s0">def </span><span class="s1">feedCurrentState(self): 
+        self.p1.feedState(self.currentState) 
+        self.p2.feedState(self.currentState) 
+ 
+ 
+    </span><span class="s0">def </span><span class="s1">reset(self): 
+        self.p1.reset() 
+        self.p2.reset() 
+        self.currentState = State() 
+        self.currentPlayer = </span><span class="s0">None</span><span class="s1"> 
+ 
+    </span><span class="s3"># @show: if True, print each board during the game</span><span class="s1"> 
+    </span><span class="s0">def </span><span class="s1">play(self</span><span class="s0">,</span><span class="s1">show=</span><span class="s0">False</span><span class="s1">): 
+        self.reset() 
+        self.feedCurrentState() 
+        </span><span class="s0">while True</span><span class="s1">: 
+            </span><span class="s3"># set current player</span><span class="s1"> 
+            </span><span class="s0">if </span><span class="s1">self.currentPlayer == self.p1: 
+                self.currentPlayer = self.p2 
+            </span><span class="s0">else</span><span class="s1">: 
+                self.currentPlayer = self.p1 
+            </span><span class="s0">if </span><span class="s1">show : 
+                self.currentState.show() 
+            [i</span><span class="s0">,</span><span class="s1">j</span><span class="s0">,</span><span class="s1">symbol] = self.currentPlayer.takeAction() 
+            self.currentState = self.currentState.nextState(i</span><span class="s0">,</span><span class="s1">j</span><span class="s0">,</span><span class="s1">symbol) 
+            hashValue = self.currentState.getHash() 
+            self.currentState</span><span class="s0">,</span><span class="s1">isEnd = self.allStates[hashValue] 
+            self.feedCurrentState() 
+            </span><span class="s0">if </span><span class="s1">isEnd: 
+                </span><span class="s0">if </span><span class="s1">self.feedback: 
+                    self.giveReward() 
+                </span><span class="s0">return </span><span class="s1">self.currentState.winner 
+ 
+ 
+</span><span class="s3"># AI player</span><span class="s1"> 
+</span><span class="s0">class </span><span class="s1">Player: 
+    </span><span class="s3"># @stepSize: step size to update estimations</span><span class="s1"> 
+    </span><span class="s3"># @exploreRate: possibility to explore</span><span class="s1"> 
+    </span><span class="s0">def </span><span class="s1">__init__(self</span><span class="s0">,</span><span class="s1">stepSize = </span><span class="s2">0.1</span><span class="s0">, </span><span class="s1">exploreRate = </span><span class="s2">0.1</span><span class="s1">): 
+        self.allStates = allStates 
+        self.estimations = dict() 
+        self.stepSize = stepSize 
+        self.exploreRate = exploreRate 
+        self.states = [] 
+ 
+    </span><span class="s0">def </span><span class="s1">reset(self): 
+        self.states = [] 
+ 
+    </span><span class="s0">def </span><span class="s1">setSymbol(self</span><span class="s0">, </span><span class="s1">symbol): 
+        self.symbol = symbol 
+        </span><span class="s0">for </span><span class="s1">hash </span><span class="s0">in </span><span class="s1">self.allStates.keys(): 
+            (state</span><span class="s0">, </span><span class="s1">isEnd) = self.allStates[hash] 
+            </span><span class="s0">if </span><span class="s1">isEnd: 
+                </span><span class="s0">if </span><span class="s1">state.winner == self.symbol: 
+                    self.estimations[hash] = </span><span class="s2">1.0</span><span class="s1"> 
+                </span><span class="s0">else</span><span class="s1">: 
+                    self.estimations[hash] = </span><span class="s2">0</span><span class="s1"> 
+            </span><span class="s0">else</span><span class="s1">: 
+                self.estimations[hash] = </span><span class="s2">0.5</span><span class="s1"> 
+ 
+    </span><span class="s3"># accept a state</span><span class="s1"> 
+    </span><span class="s0">def </span><span class="s1">feedState(self</span><span class="s0">, </span><span class="s1">state): 
+        self.states.append(state) 
+ 
+    </span><span class="s3"># update estimation according to reward</span><span class="s1"> 
+    </span><span class="s0">def </span><span class="s1">feedReward(self</span><span class="s0">, </span><span class="s1">reward): 
+        </span><span class="s0">if </span><span class="s1">len(self.states) == </span><span class="s2">0</span><span class="s1">: 
+            </span><span class="s0">return</span><span class="s1"> 
+        self.states = [state.getHash() </span><span class="s0">for </span><span class="s1">state </span><span class="s0">in </span><span class="s1">self.states] 
+        target = reward 
+        </span><span class="s0">for </span><span class="s1">latestState </span><span class="s0">in </span><span class="s1">reversed(self.states): 
+            value = self.estimations[latestState] + self.stepSize * (target - self.estimations[latestState]) 
+            self.estimations[latestState] = value 
+            target = value 
+        self.states = [] 
+ 
+    </span><span class="s3"># determine next action</span><span class="s1"> 
+    </span><span class="s0">def </span><span class="s1">takeAction(self): 
+        state = self.states[-</span><span class="s2">1</span><span class="s1">] 
+        nextStates = [] 
+        nextPositions = [] 
+        </span><span class="s0">for </span><span class="s1">i </span><span class="s0">in </span><span class="s1">range(BOARD_ROWS): 
+            </span><span class="s0">for </span><span class="s1">j </span><span class="s0">in </span><span class="s1">range(BOARD_COLS): 
+                </span><span class="s0">if </span><span class="s1">state.data[i</span><span class="s0">,</span><span class="s1">j] == </span><span class="s2">0 </span><span class="s1">: 
+                    nextPositions.append([i</span><span class="s0">,</span><span class="s1">j]) 
+                    nextStates.append(state.nextState(i</span><span class="s0">,</span><span class="s1">j</span><span class="s0">,</span><span class="s1">self.symbol).getHash()) 
+        </span><span class="s0">if </span><span class="s1">np.random.binomial(</span><span class="s2">1</span><span class="s0">,</span><span class="s1">self.exploreRate): 
+            np.random.shuffle(nextPositions) 
+        </span><span class="s3"># Not sure if truncating is the best way to deal with exploratory stop</span><span class="s1"> 
+        </span><span class="s3"># Maybe it's better to only skip this step rather than  forget all the history</span><span class="s1"> 
+            self.states = [] 
+            action = nextPositions[</span><span class="s2">0</span><span class="s1">] 
+            action.append(self.symbol) 
+            </span><span class="s0">return </span><span class="s1">action 
+ 
+        values = [] 
+        </span><span class="s0">for </span><span class="s1">hash</span><span class="s0">, </span><span class="s1">pos </span><span class="s0">in </span><span class="s1">zip(nextStates</span><span class="s0">, </span><span class="s1">nextPositions): 
+            values.append((self.estimations[hash]</span><span class="s0">, </span><span class="s1">pos)) 
+        np.random.shuffle(values) 
+        values.sort(key=</span><span class="s0">lambda </span><span class="s1">x: x[</span><span class="s2">0</span><span class="s1">]</span><span class="s0">, </span><span class="s1">reverse=</span><span class="s0">True</span><span class="s1">) 
+        action = values[</span><span class="s2">0</span><span class="s1">][</span><span class="s2">1</span><span class="s1">] 
+        action.append(self.symbol) 
+        </span><span class="s0">return </span><span class="s1">action 
+ 
+    </span><span class="s0">def </span><span class="s1">savePolicy(self): 
+        fw = open(</span><span class="s4">'optimal_policy_' </span><span class="s1">+ str(self.symbol)</span><span class="s0">,</span><span class="s4">'wb'</span><span class="s1">) 
+        pickle.dump(self.estimations</span><span class="s0">,</span><span class="s1">fw) 
+        fw.close() 
+ 
+    </span><span class="s0">def </span><span class="s1">loadPolicy(self): 
+        fr = open(</span><span class="s4">'optimal_policy_' </span><span class="s1">+ str(self.symbol)</span><span class="s0">, </span><span class="s4">'rb'</span><span class="s1">) 
+        self.estimations = pickle.load(fr) 
+        fr.close() 
+ 
+ 
+</span><span class="s3"># human interface</span><span class="s1"> 
+</span><span class="s3"># input a number to put a chessman</span><span class="s1"> 
+</span><span class="s3"># | 1 | 2 | 3</span><span class="s1"> 
+</span><span class="s3"># |</span><span class="s1"> 
+</span><span class="s3"># | 4 | 5 | 6 |</span><span class="s1"> 
+</span><span class="s3"># | 7 | 8 | 9 |</span><span class="s1"> 
+ 
+</span><span class="s0">class </span><span class="s1">HumanPlayer: 
+    </span><span class="s0">def </span><span class="s1">__init__(self</span><span class="s0">, </span><span class="s1">stepSize = </span><span class="s2">0.1</span><span class="s0">, </span><span class="s1">exploreRate=</span><span class="s2">0.1</span><span class="s1">): 
+        self.symbol = </span><span class="s0">None</span><span class="s1"> 
+        self.currentState = </span><span class="s0">None</span><span class="s1"> 
+        </span><span class="s0">return</span><span class="s1"> 
+    </span><span class="s0">def </span><span class="s1">reset(self): 
+        </span><span class="s0">return</span><span class="s1"> 
+    </span><span class="s0">def </span><span class="s1">setSymbol(self</span><span class="s0">, </span><span class="s1">symbol): 
+        self.symbol = symbol 
+        </span><span class="s0">return</span><span class="s1"> 
+    </span><span class="s0">def </span><span class="s1">feedState(self</span><span class="s0">, </span><span class="s1">state): 
+        self.currentState = state 
+        </span><span class="s0">return</span><span class="s1"> 
+    </span><span class="s0">def </span><span class="s1">feedReward(self</span><span class="s0">, </span><span class="s1">reward): 
+        </span><span class="s0">return</span><span class="s1"> 
+    </span><span class="s0">def </span><span class="s1">takeAction(self): 
+        data = int(input(</span><span class="s4">&quot;Input your position:&quot;</span><span class="s1">)) 
+        data -= </span><span class="s2">1</span><span class="s1"> 
+        i = data // int(BOARD_COLS) 
+        j = data % BOARD_COLS 
+        </span><span class="s0">if </span><span class="s1">self.currentState.data[i</span><span class="s0">, </span><span class="s1">j] != </span><span class="s2">0</span><span class="s1">: 
+            </span><span class="s0">return </span><span class="s1">self.takeAction() 
+        </span><span class="s0">return </span><span class="s1">(i</span><span class="s0">, </span><span class="s1">j</span><span class="s0">, </span><span class="s1">self.symbol) 
+ 
+</span><span class="s0">def </span><span class="s1">train(epochs=</span><span class="s2">20000</span><span class="s1">): 
+    player1 = Player() 
+    player2 = Player() 
+    judger = Judger(player1</span><span class="s0">, </span><span class="s1">player2) 
+    player1Win = </span><span class="s2">0.0</span><span class="s1"> 
+    player2Win = </span><span class="s2">0.0</span><span class="s1"> 
+    </span><span class="s0">for </span><span class="s1">i </span><span class="s0">in </span><span class="s1">range(</span><span class="s2">0</span><span class="s0">, </span><span class="s1">epochs): 
+        print(</span><span class="s4">&quot;Epoch&quot;</span><span class="s0">, </span><span class="s1">i) 
+        winner = judger.play() 
+        </span><span class="s0">if </span><span class="s1">winner == </span><span class="s2">1</span><span class="s1">: 
+            player1Win += </span><span class="s2">1</span><span class="s1"> 
+        </span><span class="s0">if </span><span class="s1">winner == -</span><span class="s2">1</span><span class="s1">: 
+            player2Win += </span><span class="s2">1</span><span class="s1"> 
+        judger.reset() 
+    print(player1Win / epochs) 
+    print(player2Win / epochs) 
+    player1.savePolicy() 
+    player2.savePolicy() 
+ 
+</span><span class="s0">def </span><span class="s1">compete(turns=</span><span class="s2">500</span><span class="s1">): 
+    player1 = Player(exploreRate=</span><span class="s2">0</span><span class="s1">) 
+    player2 = Player(exploreRate=</span><span class="s2">0</span><span class="s1">) 
+    judger = Judger(player1</span><span class="s0">, </span><span class="s1">player2</span><span class="s0">, False</span><span class="s1">) 
+    player1.loadPolicy() 
+    player2.loadPolicy() 
+    player1Win = </span><span class="s2">0.0</span><span class="s1"> 
+    player2Win = </span><span class="s2">0.0</span><span class="s1"> 
+    </span><span class="s0">for </span><span class="s1">i </span><span class="s0">in </span><span class="s1">range(</span><span class="s2">0</span><span class="s0">, </span><span class="s1">turns): 
+        print(</span><span class="s4">&quot;Epoch&quot;</span><span class="s0">, </span><span class="s1">i) 
+        winner = judger.play() 
+        </span><span class="s0">if </span><span class="s1">winner == </span><span class="s2">1</span><span class="s1">: 
+            player1Win += </span><span class="s2">1</span><span class="s1"> 
+        </span><span class="s0">if </span><span class="s1">winner == -</span><span class="s2">1</span><span class="s1">: 
+            player2Win += </span><span class="s2">1</span><span class="s1"> 
+        judger.reset() 
+    print(player1Win / turns) 
+    print(player2Win / turns) 
+ 
+</span><span class="s0">def </span><span class="s1">play(): 
+    </span><span class="s0">while True</span><span class="s1">: 
+        player1 = Player(exploreRate=</span><span class="s2">0</span><span class="s1">) 
+        player2 = HumanPlayer() 
+        judger = Judger(player1</span><span class="s0">, </span><span class="s1">player2</span><span class="s0">, False</span><span class="s1">) 
+        player1.loadPolicy() 
+        winner = judger.play(</span><span class="s0">True</span><span class="s1">) 
+        </span><span class="s0">if </span><span class="s1">winner == player2.symbol: 
+            print(</span><span class="s4">&quot;Win!&quot;</span><span class="s1">) 
+        </span><span class="s0">elif </span><span class="s1">winner == player1.symbol: 
+            print(</span><span class="s4">&quot;Lose!&quot;</span><span class="s1">) 
+        </span><span class="s0">else</span><span class="s1">: 
+            print(</span><span class="s4">&quot;Tie!&quot;</span><span class="s1">) 
+ 
+train() 
+compete() 
+play()</span></pre>
+</body>
+</html>
